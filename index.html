@@ -34,7 +34,7 @@ select:focus,input:focus{outline:2px solid var(--blue);border-color:var(--blue)}
 .lote-prefix{display:flex;align-items:center;gap:6px}
 .lote-prefix span{background:var(--blue);color:#fff;padding:10px 10px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap}
 .lote-prefix input{flex:1}
-.btn-add{width:100%;padding:12px;border:2px dashed var(--blue);border-radius:8px;background:transparent;color:var(--blue);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-add{width:100%;padding:16px;border:2px dashed var(--blue);border-radius:8px;background:transparent;color:var(--blue);font-size:16px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:rgba(27,58,107,0.2);touch-action:manipulation;min-height:56px}
 .btn-add:active{background:var(--blue-light)}
 .massa-card{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
 .massa-header{background:var(--blue);color:#fff;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
@@ -135,7 +135,7 @@ select:focus,input:focus{outline:2px solid var(--blue);border-color:var(--blue)}
 <div class="card">
   <h2>Lotes enviados</h2>
   <div id="lotes-container"></div>
-  <button class="btn-add" onclick="adicionarLote()">
+  <button class="btn-add" type="button" id="btn-adicionar" onclick="window.adicionarLote()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
     Adicionar lotes
   </button>
@@ -192,7 +192,7 @@ const PRODUTOS = {
   PZ:{nome:"Pizza",validade:45}
 };
 
-function adicionarLote(){
+window.adicionarLote = function adicionarLote(){
   loteCount++;
   const id = 'lote_'+loteCount;
   const cod = document.getElementById('produto').value || 'XX';
@@ -217,7 +217,7 @@ function adicionarLote(){
   atualizarMassas();
 }
 
-function setTipo(id, tipo, btn){
+window.setTipo = function setTipo(id, tipo, btn){
   document.querySelectorAll(`#lote_${id} .tipo-btn`).forEach(b=>b.classList.remove('ativo'));
   btn.classList.add('ativo');
   const cod = document.getElementById('produto').value || 'XX';
@@ -240,12 +240,12 @@ function setTipo(id, tipo, btn){
   atualizarMassas();
 }
 
-function removerLote(id){
+window.removerLote = function removerLote(id){
   document.getElementById(id).remove();
   atualizarMassas();
 }
 
-function getLotes(){
+window.getLotes = function getLotes(){
   const cod = document.getElementById('produto').value || 'XX';
   const hoje = new Date();
   const ddmm = String(hoje.getDate()).padStart(2,'0')+String(hoje.getMonth()+1).padStart(2,'0');
@@ -270,7 +270,7 @@ function getLotes(){
   return [...new Set(lotes)];
 }
 
-function atualizarMassas(){
+window.atualizarMassas = function atualizarMassas(){
   const lotes=getLotes();
   const sec=document.getElementById('massas-section');
   const cont=document.getElementById('massas-container');
@@ -321,7 +321,7 @@ function atualizarMassas(){
   atualizarResumo(lotes);
 }
 
-function calcTotal(lote){
+window.calcTotal = function calcTotal(lote){
   const v=parseInt(document.getElementById('vol_'+lote).value)||0;
   const c=parseInt(document.getElementById('croc_'+lote).value)||0;
   const p=parseInt(document.getElementById('pest_'+lote).value)||0;
@@ -343,7 +343,7 @@ function calcTotal(lote){
   atualizarResumo(getLotes());
 }
 
-function carregarFoto(input, lote){
+window.carregarFoto = function carregarFoto(input, lote){
   const file=input.files[0];
   if(!file) return;
   const reader=new FileReader();
@@ -360,14 +360,14 @@ function carregarFoto(input, lote){
   reader.readAsDataURL(file);
 }
 
-function atualizarResumo(lotes){
+window.atualizarResumo = function atualizarResumo(lotes){
   const n=lotes.length;
   document.getElementById('resumo-texto').textContent=n+' massa'+(n!==1?'s':'')+' para avaliar';
   const comFoto=lotes.filter(l=>massasData[l]&&massasData[l].fotoBase64).length;
   document.getElementById('resumo-status').textContent=comFoto+'/'+n+' fotos';
 }
 
-function gerarPDF(){
+window.gerarPDF = function gerarPDF(){
   const produto=document.getElementById('produto').value;
   const dataFab=document.getElementById('data-fab').value;
   const turno=document.getElementById('turno').value;
@@ -611,10 +611,27 @@ function gerarPDF(){
   document.getElementById('modal').classList.add('open');
 }
 
-function fecharModal(){document.getElementById('modal').classList.remove('open');}
+window.fecharModal = function fecharModal(){document.getElementById('modal').classList.remove('open');}
 
 // Inicializa com data de hoje
 document.getElementById('data-fab').value=new Date().toISOString().split('T')[0];
+
+// Botão adicionar lote - fix para mobile
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('btn-adicionar');
+  if(btn){
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      window.adicionarLote();
+    }, {passive: false});
+    btn.addEventListener('touchend', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      window.adicionarLote();
+    }, {passive: false});
+  }
+});
 
 // Auto-resize para Google Sites iframe
 function sendHeight(){
@@ -631,3 +648,4 @@ setInterval(sendHeight, 800);
 </script>
 </body>
 </html>
+
