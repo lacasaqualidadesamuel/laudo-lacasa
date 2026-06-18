@@ -63,6 +63,7 @@ select:focus,input:focus{outline:2px solid var(--blue);border-color:var(--blue)}
 .lotes-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .chip{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;cursor:pointer;touch-action:manipulation;color:#555}
 .chip.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+.chip.bloq{background:#eee;color:#bbb;border-color:#ddd;cursor:not-allowed;opacity:.6}
 .lotes-selecionados{font-size:11px;color:var(--blue);font-style:italic;min-height:16px;margin-bottom:8px;word-break:break-all}
 .foto-area{border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:#fff;position:relative}
 .foto-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
@@ -393,6 +394,18 @@ function atualizarChipsFotos(){
   });
 }
 
+function getLotesBloqueados(fid){
+  // Retorna lotes já vinculados em OUTRAS fotos
+  var bloqueados=[];
+  Object.keys(fotosData).forEach(function(outroFid){
+    if(outroFid===fid) return;
+    (fotosData[outroFid].lotesSel||[]).forEach(function(l){
+      if(!bloqueados.includes(l)) bloqueados.push(l);
+    });
+  });
+  return bloqueados;
+}
+
 function renderizarChips(fid){
   var cont=document.getElementById('chips'+fid);
   if(!cont) return;
@@ -401,16 +414,22 @@ function renderizarChips(fid){
   // Remove lotes selecionados que já não existem
   sel=sel.filter(function(l){return lotes.includes(l);});
   if(fotosData[fid]) fotosData[fid].lotesSel=sel;
+  var bloqueados=getLotesBloqueados(fid);
   cont.innerHTML='';
   lotes.forEach(function(lote){
     var btn=document.createElement('button');
     btn.type='button';
-    btn.className='chip'+(sel.includes(lote)?' sel':'');
-    // Mostrar só o número da massa
+    var isSel=sel.includes(lote);
+    var isBloq=bloqueados.includes(lote);
+    btn.className='chip'+(isSel?' sel':isBloq?' bloq':'');
     var partes=lote.split('-');
     btn.textContent=partes[1]||lote;
-    btn.title=lote;
-    btn.onclick=function(){toggleChip(fid,lote,btn);};
+    btn.title=isBloq?lote+' (vinculado em outra foto)':lote;
+    if(isBloq){
+      btn.disabled=true;
+    } else {
+      btn.onclick=function(){toggleChip(fid,lote,btn);};
+    }
     cont.appendChild(btn);
   });
   atualizarTextoSel(fid);
@@ -422,6 +441,10 @@ function toggleChip(fid,lote,btn){
   if(idx>=0){ sel.splice(idx,1); btn.classList.remove('sel'); }
   else { sel.push(lote); btn.classList.add('sel'); }
   atualizarTextoSel(fid);
+  // Atualizar chips de todas as outras fotos para refletir bloqueio
+  Object.keys(fotosData).forEach(function(outroFid){
+    if(outroFid!==fid) renderizarChips(outroFid);
+  });
 }
 
 function atualizarTextoSel(fid){
