@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Laudo de Qualidade — La Casa Di Pão</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1B3A6B;--blue-light:#E8EEF7;--green:#1A7A3A;--green-light:#E8F5EC;
+  --gray:#666;--gray-light:#F5F5F5;--border:#DDDDDD;--red:#C0392B;
+  --white:#fff;--font:'Segoe UI',system-ui,sans-serif
+}
+body{font-family:var(--font);background:#F0F2F5;color:#222;font-size:15px;padding-bottom:80px}
+header{background:var(--blue);color:#fff;padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+header .logo{width:40px;height:40px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--blue);text-align:center;line-height:1.2;flex-shrink:0}
+header h1{font-size:15px;font-weight:600;line-height:1.3}
+header p{font-size:12px;opacity:.75;margin-top:2px}
+.card{background:#fff;border-radius:12px;margin:12px;padding:16px;border:1px solid var(--border)}
+.card h2{font-size:13px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--blue-light)}
+label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:4px;margin-top:12px}
+label:first-of-type{margin-top:0}
+select,input[type=text],input[type=date]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;background:#fff;color:#222;-webkit-appearance:none;appearance:none}
+select:focus,input:focus{outline:2px solid var(--blue);border-color:var(--blue)}
+.lote-group{background:var(--gray-light);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid var(--border)}
+.lote-group h3{font-size:13px;font-weight:600;color:var(--blue);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.lote-group h3 button{background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.tipo-lote{display:flex;gap:8px;margin-bottom:10px}
+.tipo-btn{flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;text-align:center;color:#555;transition:all .2s}
+.tipo-btn.ativo{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.lote-inputs{display:grid;gap:8px}
+.lote-inputs.intervalo{grid-template-columns:1fr 1fr}
+.lote-prefix{display:flex;align-items:center;gap:6px}
+.lote-prefix span{background:var(--blue);color:#fff;padding:10px 10px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap}
+.lote-prefix input{flex:1}
+.btn-add{width:100%;padding:12px;border:2px dashed var(--blue);border-radius:8px;background:transparent;color:var(--blue);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-add:active{background:var(--blue-light)}
+.massa-card{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.massa-header{background:var(--blue);color:#fff;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.massa-body{padding:14px}
+.qc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.qc-item label{font-size:11px;color:var(--gray);margin-bottom:6px;text-align:center;display:block}
+.qc-item input[type=number]{width:100%;padding:10px 6px;border:1px solid var(--border);border-radius:8px;font-size:18px;font-weight:700;text-align:center;color:var(--blue)}
+.total-badge{background:var(--blue-light);border:1px solid var(--blue);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.total-badge .label{font-size:12px;color:var(--blue);font-weight:600}
+.total-badge .valor{font-size:20px;font-weight:700;color:var(--blue)}
+.status-badge{border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;text-align:center;margin-bottom:12px}
+.status-badge.aprovado{background:var(--green-light);color:var(--green);border:1px solid var(--green)}
+.status-badge.reprovado{background:#FDECEA;color:var(--red);border:1px solid var(--red)}
+.foto-area{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;background:var(--gray-light);position:relative}
+.foto-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.foto-area.tem-foto{border-color:var(--green);background:var(--green-light)}
+.foto-area p{font-size:13px;color:var(--gray);margin-top:6px}
+.foto-area .icon{font-size:28px;color:var(--gray)}
+.foto-area.tem-foto .icon{color:var(--green)}
+.foto-preview{width:100%;border-radius:6px;margin-top:8px;display:none;max-height:160px;object-fit:cover}
+.obs-input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;resize:none;height:70px;font-family:var(--font)}
+.btn-gerar{position:fixed;bottom:0;left:0;right:0;background:var(--blue);color:#fff;border:none;padding:18px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;z-index:200}
+.btn-gerar:active{background:#142d55}
+.btn-gerar svg{width:20px;height:20px}
+.resumo-bar{background:var(--blue-light);border:1px solid var(--blue);border-radius:10px;margin:0 12px 4px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.resumo-bar span{font-size:13px;color:var(--blue);font-weight:600}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:340px;text-align:center}
+.modal-box h3{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:8px}
+.modal-box p{font-size:14px;color:var(--gray);margin-bottom:20px}
+.modal-btns{display:flex;flex-direction:column;gap:10px}
+.btn-wpp{background:#25D366;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-download{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-fechar{background:none;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;color:var(--gray);cursor:pointer}
+.spinner{display:none;text-align:center;padding:20px;color:var(--blue);font-size:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LA<br>CASA</div>
+  <div>
+    <h1>Laudo de Qualidade</h1>
+    <p>Rastreabilidade por massa</p>
+  </div>
+</header>
+
+<!-- DADOS GERAIS -->
+<div class="card">
+  <h2>Dados da produção</h2>
+  <label>Produto</label>
+  <select id="produto">
+    <option value="">— Selecione o produto —</option>
+    <option value="FA">Pão Francês ALTA (FA)</option>
+    <option value="FM">Pão Francês MÉDIA (FM)</option>
+    <option value="FB">Pão Francês BAIXA (FB)</option>
+    <option value="PA">Pão de Água (PA)</option>
+    <option value="BG">Pão Baguete (BG)</option>
+    <option value="QG">Pão de Queijo Grande (QG)</option>
+    <option value="QP">Pão de Queijo Pequeno (QP)</option>
+    <option value="HB">Pão Hambúrguer (HB)</option>
+    <option value="PD">Pão de Dog (PD)</option>
+    <option value="MD">Pão Mini Dog (MD)</option>
+    <option value="DG">Dogão (DG)</option>
+    <option value="BA">Pão de Batata (BA)</option>
+    <option value="CA">Pão Caseiro (CA)</option>
+    <option value="SV">Sovado (SV)</option>
+    <option value="BM">Broa de Milho (BM)</option>
+    <option value="BP">Broa de Aipim (BP)</option>
+    <option value="BI">Broa de Cereais (BI)</option>
+    <option value="CH">Chipa (CH)</option>
+    <option value="CQ">Chineque (CQ)</option>
+    <option value="CV">Cueca Virada (CV)</option>
+    <option value="DN">Donuts (DN)</option>
+    <option value="SP">Sonho (SP)</option>
+    <option value="TR">Trança (TR)</option>
+    <option value="BG2">Pão Baguete (BG)</option>
+    <option value="FL">Pão Francês de Milho (FL)</option>
+    <option value="PZ">Pizza (PZ)</option>
+  </select>
+
+  <label>Data de fabricação</label>
+  <input type="date" id="data-fab">
+
+  <label>Turno</label>
+  <select id="turno">
+    <option value="Manhã">Manhã</option>
+    <option value="Tarde">Tarde</option>
+    <option value="Noite">Noite</option>
+  </select>
+
+  <label>Responsável</label>
+  <input type="text" id="responsavel" placeholder="Nome do técnico responsável">
+</div>
+
+<!-- LOTES -->
+<div class="card">
+  <h2>Lotes enviados</h2>
+  <div id="lotes-container"></div>
+  <button class="btn-add" onclick="adicionarLote()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+    Adicionar lotes
+  </button>
+</div>
+
+<!-- MASSAS (gerado dinamicamente) -->
+<div id="massas-section" style="display:none">
+  <div class="resumo-bar">
+    <span id="resumo-texto">0 massas</span>
+    <span id="resumo-status" style="color:var(--green)">—</span>
+  </div>
+  <div id="massas-container"></div>
+</div>
+
+<button class="btn-gerar" onclick="gerarPDF()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  Gerar Laudo PDF
+</button>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3>Laudo gerado!</h3>
+    <p>Escolha como deseja compartilhar o laudo.</p>
+    <div class="modal-btns">
+      <button class="btn-wpp" id="btn-wpp">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+        Enviar pelo WhatsApp
+      </button>
+      <button class="btn-download" id="btn-download">Salvar PDF no celular</button>
+      <button class="btn-fechar" onclick="fecharModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let loteCount = 0;
+let massasData = {};
+let pdfBlob = null;
+
+const PRODUTOS = {
+  FA:{nome:"Pão Francês ALTA",validade:45},FM:{nome:"Pão Francês MÉDIA",validade:45},
+  FB:{nome:"Pão Francês BAIXA",validade:45},PA:{nome:"Pão de Água",validade:45},
+  BG:{nome:"Pão Baguete",validade:45},QG:{nome:"Pão de Queijo Grande",validade:45},
+  QP:{nome:"Pão de Queijo Pequeno",validade:45},HB:{nome:"Pão Hambúrguer",validade:45},
+  PD:{nome:"Pão de Dog",validade:45},MD:{nome:"Pão Mini Dog",validade:45},
+  DG:{nome:"Dogão",validade:45},BA:{nome:"Pão de Batata",validade:45},
+  CA:{nome:"Pão Caseiro",validade:45},SV:{nome:"Sovado",validade:45},
+  BM:{nome:"Broa de Milho",validade:45},BP:{nome:"Broa de Aipim",validade:45},
+  BI:{nome:"Broa de Cereais",validade:45},CH:{nome:"Chipa",validade:45},
+  CQ:{nome:"Chineque",validade:45},CV:{nome:"Cueca Virada",validade:45},
+  DN:{nome:"Donuts",validade:45},SP:{nome:"Sonho",validade:45},
+  TR:{nome:"Trança",validade:45},FL:{nome:"Pão Francês de Milho",validade:45},
+  PZ:{nome:"Pizza",validade:45}
+};
+
+function adicionarLote(){
+  loteCount++;
+  const id = 'lote_'+loteCount;
+  const cod = document.getElementById('produto').value || 'XX';
+  const hoje = new Date();
+  const ddmm = String(hoje.getDate()).padStart(2,'0')+String(hoje.getMonth()+1).padStart(2,'0');
+  const div = document.createElement('div');
+  div.className = 'lote-group'; div.id = id;
+  div.innerHTML = `
+    <h3>Grupo ${loteCount} <button onclick="removerLote('${id}')">×</button></h3>
+    <div class="tipo-lote">
+      <button class="tipo-btn ativo" onclick="setTipo('${id}','avulso',this)">Lote avulso</button>
+      <button class="tipo-btn" onclick="setTipo('${id}','intervalo',this)">Intervalo</button>
+    </div>
+    <div class="lote-inputs" id="inputs_${id}" data-tipo="avulso">
+      <div class="lote-prefix">
+        <span>${cod}-</span>
+        <input type="text" placeholder="001" maxlength="3" id="seq1_${id}" oninput="atualizarMassas()" style="text-align:center;font-weight:700">
+        <span>-M-${ddmm}</span>
+      </div>
+    </div>`;
+  document.getElementById('lotes-container').appendChild(div);
+  atualizarMassas();
+}
+
+function setTipo(id, tipo, btn){
+  document.querySelectorAll(`#lote_${id} .tipo-btn`).forEach(b=>b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  const cod = document.getElementById('produto').value || 'XX';
+  const hoje = new Date();
+  const ddmm = String(hoje.getDate()).padStart(2,'0')+String(hoje.getMonth()+1).padStart(2,'0');
+  const cont = document.getElementById(`inputs_${id}`);
+  cont.dataset.tipo = tipo;
+  if(tipo==='avulso'){
+    cont.className='lote-inputs';
+    cont.innerHTML=`<div class="lote-prefix">
+      <span>${cod}-</span>
+      <input type="text" placeholder="001" maxlength="3" id="seq1_${id}" oninput="atualizarMassas()" style="text-align:center;font-weight:700">
+      <span>-M-${ddmm}</span></div>`;
+  } else {
+    cont.className='lote-inputs intervalo';
+    cont.innerHTML=`
+      <div><label style="font-size:11px">De</label><div class="lote-prefix"><span>${cod}-</span><input type="text" placeholder="001" maxlength="3" id="seq1_${id}" oninput="atualizarMassas()" style="text-align:center;font-weight:700"></div></div>
+      <div><label style="font-size:11px">Até</label><div class="lote-prefix"><span>${cod}-</span><input type="text" placeholder="010" maxlength="3" id="seq2_${id}" oninput="atualizarMassas()" style="text-align:center;font-weight:700"></div></div>`;
+  }
+  atualizarMassas();
+}
+
+function removerLote(id){
+  document.getElementById(id).remove();
+  atualizarMassas();
+}
+
+function getLotes(){
+  const cod = document.getElementById('produto').value || 'XX';
+  const hoje = new Date();
+  const ddmm = String(hoje.getDate()).padStart(2,'0')+String(hoje.getMonth()+1).padStart(2,'0');
+  const sfx = `-M-${ddmm}`;
+  let lotes=[];
+  document.querySelectorAll('.lote-group').forEach(g=>{
+    const id=g.id;
+    const cont=document.getElementById(`inputs_${id}`);
+    const tipo=cont.dataset.tipo;
+    const s1=document.getElementById(`seq1_${id}`);
+    const s2=document.getElementById(`seq2_${id}`);
+    if(!s1||!s1.value.trim()) return;
+    if(tipo==='avulso'){
+      lotes.push(`${cod}-${s1.value.padStart(3,'0')}${sfx}`);
+    } else {
+      if(!s2||!s2.value.trim()) return;
+      const de=parseInt(s1.value),ate=parseInt(s2.value);
+      if(isNaN(de)||isNaN(ate)||ate<de) return;
+      for(let i=de;i<=ate;i++) lotes.push(`${cod}-${String(i).padStart(3,'0')}${sfx}`);
+    }
+  });
+  return [...new Set(lotes)];
+}
+
+function atualizarMassas(){
+  const lotes=getLotes();
+  const sec=document.getElementById('massas-section');
+  const cont=document.getElementById('massas-container');
+  if(lotes.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
+  lotes.forEach(lote=>{
+    if(!massasData[lote]) massasData[lote]={volume:'',crocancia:'',pestana:'',obs:'',foto:null,fotoBase64:null};
+    if(!document.getElementById('massa_'+lote)){
+      const div=document.createElement('div');
+      div.className='massa-card'; div.id='massa_'+lote;
+      div.innerHTML=`
+        <div class="massa-header">
+          <span>${lote}</span>
+          <span id="badge_${lote}" style="font-size:12px;opacity:.8">—</span>
+        </div>
+        <div class="massa-body">
+          <div class="qc-grid">
+            <div class="qc-item"><label>Volume</label><input type="number" min="0" max="100" step="5" placeholder="0" id="vol_${lote}" oninput="calcTotal('${lote}')"></div>
+            <div class="qc-item"><label>Crocância</label><input type="number" min="0" max="100" step="5" placeholder="0" id="croc_${lote}" oninput="calcTotal('${lote}')"></div>
+            <div class="qc-item"><label>Pestana</label><input type="number" min="0" max="100" step="5" placeholder="0" id="pest_${lote}" oninput="calcTotal('${lote}')"></div>
+          </div>
+          <div class="total-badge">
+            <span class="label">Pontuação total</span>
+            <span class="valor" id="total_${lote}">—</span>
+          </div>
+          <div class="status-badge aprovado" id="status_${lote}">✔ Aprovado</div>
+          <div class="foto-area" id="fotoArea_${lote}">
+            <input type="file" accept="image/*" capture="environment" onchange="carregarFoto(this,'${lote}')">
+            <div class="icon">📷</div>
+            <p>Foto do produto assado</p>
+            <p style="font-size:11px;margin-top:4px;color:#999">Toque para tirar ou escolher foto</p>
+            <img id="fotoImg_${lote}" class="foto-preview">
+          </div>
+          <label style="margin-top:12px">Observações</label>
+          <textarea class="obs-input" id="obs_${lote}" placeholder="Opcional..." oninput="massasData['${lote}'].obs=this.value"></textarea>
+        </div>`;
+      cont.appendChild(div);
+    }
+  });
+  // Remover massas que não estão mais nos lotes
+  Object.keys(massasData).forEach(lote=>{
+    if(!lotes.includes(lote)){
+      const el=document.getElementById('massa_'+lote);
+      if(el) el.remove();
+      delete massasData[lote];
+    }
+  });
+  atualizarResumo(lotes);
+}
+
+function calcTotal(lote){
+  const v=parseInt(document.getElementById('vol_'+lote).value)||0;
+  const c=parseInt(document.getElementById('croc_'+lote).value)||0;
+  const p=parseInt(document.getElementById('pest_'+lote).value)||0;
+  const t=v+c+p;
+  massasData[lote]={...massasData[lote],volume:v,crocancia:c,pestana:p};
+  const totalEl=document.getElementById('total_'+lote);
+  const statusEl=document.getElementById('status_'+lote);
+  const badgeEl=document.getElementById('badge_'+lote);
+  if(v>0||c>0||p>0){
+    totalEl.textContent=t+' pts';
+    statusEl.textContent='✔ Aprovado';
+    statusEl.className='status-badge aprovado';
+    badgeEl.textContent='✔ '+t+' pts';
+  } else {
+    totalEl.textContent='—';
+    statusEl.textContent='✔ Aprovado';
+    badgeEl.textContent='—';
+  }
+  atualizarResumo(getLotes());
+}
+
+function carregarFoto(input, lote){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    massasData[lote].fotoBase64=e.target.result;
+    massasData[lote].foto=file.name;
+    const img=document.getElementById('fotoImg_'+lote);
+    img.src=e.target.result; img.style.display='block';
+    const area=document.getElementById('fotoArea_'+lote);
+    area.classList.add('tem-foto');
+    area.querySelector('p').textContent='✔ Foto carregada';
+    area.querySelector('.icon').textContent='✅';
+  };
+  reader.readAsDataURL(file);
+}
+
+function atualizarResumo(lotes){
+  const n=lotes.length;
+  document.getElementById('resumo-texto').textContent=n+' massa'+(n!==1?'s':'')+' para avaliar';
+  const comFoto=lotes.filter(l=>massasData[l]&&massasData[l].fotoBase64).length;
+  document.getElementById('resumo-status').textContent=comFoto+'/'+n+' fotos';
+}
+
+function gerarPDF(){
+  const produto=document.getElementById('produto').value;
+  const dataFab=document.getElementById('data-fab').value;
+  const turno=document.getElementById('turno').value;
+  const resp=document.getElementById('responsavel').value;
+  const lotes=getLotes();
+
+  if(!produto){alert('Selecione o produto.');return;}
+  if(!dataFab){alert('Informe a data de fabricação.');return;}
+  if(!resp.trim()){alert('Informe o responsável.');return;}
+  if(lotes.length===0){alert('Adicione ao menos um lote.');return;}
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, ML=14, MR=14, CW=W-ML-MR;
+  let y=14;
+
+  const azul=[27,58,107], azulL=[232,238,247], verde=[26,122,58], verdeL=[232,245,236];
+  const cinzaL=[245,245,245], branco=[255,255,255], cinza=[102,102,102];
+
+  function addPage(){doc.addPage();y=14;}
+  function checkY(needed){if(y+needed>285)addPage();}
+
+  // HEADER
+  doc.setFillColor(...azul);
+  doc.rect(0,0,W,22,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
+  doc.text('LAUDO DE QUALIDADE — RASTREABILIDADE POR MASSA',ML,10);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(200,210,230);
+  doc.text('Panificadora e Confeitaria La Casa Di Pão Ltda.  |  CNPJ: 68.812.312/0001-33  |  (41) 3248-5323',ML,16);
+  doc.text('Rev. 00',W-ML,16,{align:'right'});
+  y=28;
+
+  // IDENTIFICAÇÃO
+  const nomeProduto=PRODUTOS[produto]?.nome||produto;
+  doc.setFillColor(...azul); doc.rect(ML,y,CW,8,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(255,255,255);
+  doc.text(nomeProduto.toUpperCase()+' — LAUDO DE QUALIDADE',ML+3,y+5.5);
+  y+=10;
+
+  const campos=[
+    ['Produto',nomeProduto],['Código / SKU',produto],
+    ['Data de Fabricação',dataFab.split('-').reverse().join('/')],
+    ['Turno',turno],['Responsável',resp],
+    ['Lotes incluídos',lotes.slice(0,3).join(', ')+(lotes.length>3?' ... ('+lotes.length+' no total)':'')],
+    ['Total de massas',lotes.length+' massas'],
+  ];
+  campos.forEach(([l,v],i)=>{
+    doc.setFillColor(...(i%2===0?cinzaL:branco));
+    doc.rect(ML,y,CW,7,'F');
+    doc.rect(ML,y,CW,7,'S');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(50,50,50);
+    doc.text(l+':',ML+2,y+4.8);
+    doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0);
+    doc.text(String(v),ML+52,y+4.8);
+    y+=7;
+  });
+  y+=6;
+
+  // LEGENDA QC
+  checkY(18);
+  doc.setFillColor(...azulL);
+  doc.rect(ML,y,CW,16,'F');
+  doc.rect(ML,y,CW,16,'S');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...azul);
+  doc.text('Critérios de Avaliação de Qualidade',ML+3,y+5);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...cinza);
+  doc.text('Notas de 0 a 100 (múltiplos de 5) por critério  |  Total máximo: 300 pts  |  Aprovado: ≥ 201 pts',ML+3,y+9.5);
+  doc.text('Volume: desenvolvimento da massa  |  Crocância: textura da casca  |  Pestana: abertura lateral característica',ML+3,y+13.5);
+  y+=20;
+
+  // MASSAS
+  lotes.forEach((lote,idx)=>{
+    const d=massasData[lote]||{};
+    const v=d.volume||0, c=d.crocancia||0, p=d.pestana||0;
+    const total=v+c+p;
+    const temNotas=v>0||c>0||p>0;
+
+    // Altura do bloco
+    const temFoto=!!d.fotoBase64;
+    const hBloco=temFoto?72:32;
+    checkY(hBloco+4);
+
+    // Header da massa
+    doc.setFillColor(...azul);
+    doc.rect(ML,y,CW,8,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+    doc.text(lote,ML+3,y+5.5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text('Massa '+(idx+1)+' de '+lotes.length,W-MR,y+5.5,{align:'right'});
+    y+=8;
+
+    // Corpo
+    doc.setFillColor(255,255,255);
+    doc.rect(ML,y,CW,hBloco-8,'F');
+    doc.rect(ML,y,CW,hBloco-8,'S');
+
+    const bodyY=y;
+
+    // QC grid
+    const colW=CW/4;
+    const qcLabels=['Volume','Crocância','Pestana','Total'];
+    const qcVals=[
+      temNotas?String(v):'—',
+      temNotas?String(c):'—',
+      temNotas?String(p):'—',
+      temNotas?String(total)+' pts':'—'
+    ];
+    qcLabels.forEach((lb,i)=>{
+      const cx=ML+i*colW;
+      const isTotal=i===3;
+      if(isTotal){doc.setFillColor(...azulL);doc.rect(cx,bodyY,colW,(temFoto?32:20),'F');}
+      doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      doc.setTextColor(isTotal?azul[0]:...cinza);
+      doc.text(lb,cx+colW/2,bodyY+6,{align:'center'});
+      doc.setFont('helvetica','bold'); doc.setFontSize(isTotal?13:12);
+      doc.setTextColor(isTotal?azul[0]:0,isTotal?azul[1]:0,isTotal?azul[2]:0);
+      doc.text(qcVals[i],cx+colW/2,bodyY+(temFoto?16:13),{align:'center'});
+    });
+
+    // Status badge
+    doc.setFillColor(...verdeL);
+    doc.rect(ML,bodyY+(temFoto?34:22),CW/2-1,8,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...verde);
+    doc.text('✔  APROVADO',ML+CW/4,bodyY+(temFoto?37.5:26),{align:'center'});
+
+    // Obs
+    if(d.obs&&d.obs.trim()){
+      doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(...cinza);
+      doc.text('Obs: '+d.obs,ML+CW/2+2,bodyY+(temFoto?37.5:26));
+    }
+
+    // FOTO
+    if(temFoto){
+      try{
+        const fotoX=ML+CW/2+2, fotoY=bodyY+2, fotoW=CW/2-4, fotoH=40;
+        doc.addImage(d.fotoBase64,'JPEG',fotoX,fotoY,fotoW,fotoH,'','FAST');
+        doc.setDrawColor(...azul); doc.rect(fotoX,fotoY,fotoW,fotoH,'S');
+        doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(...cinza);
+        doc.text('Foto: produto assado — '+lote,fotoX,fotoY+fotoH+3.5);
+      }catch(e){}
+    } else {
+      // Placeholder foto
+      doc.setFillColor(240,244,248);
+      doc.rect(ML+CW/2+2,bodyY+2,CW/2-4,(temFoto?40:18),'F');
+      doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(...cinza);
+      doc.text('[Foto não inserida]',ML+CW*3/4,bodyY+(temFoto?22:11),{align:'center'});
+    }
+
+    y+=hBloco-4;
+  });
+
+  y+=8;
+
+  // PARÂMETROS MICROBIOLÓGICOS
+  checkY(50);
+  doc.setFillColor(...azul); doc.rect(ML,y,CW,8,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+  doc.text('PARÂMETROS MICROBIOLÓGICOS',ML+3,y+5.5);
+  y+=8;
+  doc.setFontSize(8); doc.setTextColor(...cinza); doc.setFont('helvetica','italic');
+  doc.text('Conforme RDC nº 724/2022 e IN 161/2022 — Alimentos Semielaborados.',ML,y+4);
+  y+=8;
+
+  const micros=[
+    ['Salmonella sp. / 25 g','Ausente'],
+    ['Bacillus cereus presuntivo / g','10²'],
+    ['Estafilococos coagulase positiva / g','5×10²'],
+    ['Escherichia coli / g','5×10'],
+  ];
+  const mW=[CW*0.5,CW*0.25,CW*0.25];
+  // header
+  doc.setFillColor(...azulL);
+  doc.rect(ML,y,CW,7,'F'); doc.rect(ML,y,CW,7,'S');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...azul);
+  doc.text('Micro-organismo',ML+2,y+4.8);
+  doc.text('Limite Permitido',ML+mW[0]+2,y+4.8);
+  doc.text('Resultado do Ensaio',ML+mW[0]+mW[1]+2,y+4.8);
+  y+=7;
+  micros.forEach(([m,l],i)=>{
+    doc.setFillColor(...(i%2===0?cinzaL:branco));
+    doc.rect(ML,y,CW,7,'F'); doc.rect(ML,y,CW,7,'S');
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(0,0,0);
+    doc.text(m,ML+2,y+4.8);
+    doc.text(l,ML+mW[0]+2,y+4.8);
+    doc.setTextColor(...cinza); doc.setFont('helvetica','italic');
+    doc.text('[RESULTADO]',ML+mW[0]+mW[1]+2,y+4.8);
+    y+=7;
+  });
+  doc.setFillColor(...cinzaL); doc.rect(ML,y,CW,7,'F'); doc.rect(ML,y,CW,7,'S');
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(...cinza);
+  doc.text('Laboratório: [NOME DO LAB / INMETRO]     Nº RA: [RA-XXXXX]     Data: [DD/MM/AAAA]',ML+2,y+4.8);
+  y+=12;
+
+  // DECLARAÇÃO
+  checkY(20);
+  doc.setFillColor(...cinzaL); doc.rect(ML,y,CW,14,'F'); doc.rect(ML,y,CW,14,'S');
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(50,50,50);
+  const decl='Declaramos que as massas identificadas neste laudo foram produzidas e avaliadas conforme os padrões internos de qualidade da La Casa Di Pão, em conformidade com as Boas Práticas de Fabricação (RDC 275/2002 e RDC 216/2004 — ANVISA). Todos os lotes listados foram aprovados para expedição.';
+  const lines=doc.splitTextToSize(decl,CW-4);
+  doc.text(lines,ML+2,y+4.5);
+  y+=18;
+
+  // ASSINATURA
+  checkY(22);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...cinza);
+  doc.line(ML,y+14,ML+70,y+14); doc.line(ML+CW-70,y+14,W-MR,y+14);
+  doc.text('Responsável pela Emissão / '+resp,ML+35,y+18,{align:'center'});
+  doc.text('Responsável Técnico — CRN/CREA nº ________',ML+CW-35,y+18,{align:'center'});
+  doc.text('Curitiba – PR, ____/____/________',W/2,y+24,{align:'center'});
+
+  // RODAPÉ em todas as páginas
+  const totalPages=doc.getNumberOfPages();
+  for(let i=1;i<=totalPages;i++){
+    doc.setPage(i);
+    doc.setFillColor(...azul); doc.rect(0,288,W,9,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(200,210,230);
+    doc.text('Rua Rev. José Ferreira Filho, 37 – Novo Mundo – Curitiba/PR – CEP 81050-422  |  INDÚSTRIA BRASILEIRA',ML,293.5);
+    doc.text('Página '+i+' de '+totalPages,W-MR,293.5,{align:'right'});
+  }
+
+  // Gerar blob
+  pdfBlob=doc.output('blob');
+  const nomeArquivo='Laudo_'+produto+'_'+dataFab+'.pdf';
+
+  document.getElementById('btn-download').onclick=()=>{
+    const url=URL.createObjectURL(pdfBlob);
+    const a=document.createElement('a'); a.href=url; a.download=nomeArquivo; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  document.getElementById('btn-wpp').onclick=()=>{
+    const texto=encodeURIComponent('🏭 *Laudo de Qualidade — La Casa Di Pão*\n\n📦 Produto: '+nomeProduto+'\n📅 Fabricação: '+dataFab.split('-').reverse().join('/')+'\n👤 Responsável: '+resp+'\n📊 Massas avaliadas: '+lotes.length+'\n\n✅ Todas as massas aprovadas para expedição.\n\n_(Salve o PDF e envie em seguida)_');
+    window.open('https://wa.me/?text='+texto,'_blank');
+    setTimeout(()=>{
+      const url=URL.createObjectURL(pdfBlob);
+      const a=document.createElement('a'); a.href=url; a.download=nomeArquivo; a.click();
+      URL.revokeObjectURL(url);
+    },1500);
+  };
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function fecharModal(){document.getElementById('modal').classList.remove('open');}
+
+// Inicializa com data de hoje
+document.getElementById('data-fab').value=new Date().toISOString().split('T')[0];
+
+// Auto-resize para Google Sites iframe
+function sendHeight(){
+  const h = document.body.scrollHeight + 60;
+  window.parent.postMessage({type:'setHeight', height: h}, '*');
+  window.parent.postMessage(JSON.stringify({sentinel:'amp',type:'embed-size',height:h}), '*');
+}
+const ro = new ResizeObserver(()=>{ sendHeight(); });
+ro.observe(document.body);
+window.addEventListener('load', sendHeight);
+document.addEventListener('click', ()=>setTimeout(sendHeight, 400));
+document.addEventListener('change', ()=>setTimeout(sendHeight, 400));
+setInterval(sendHeight, 800);
+</script>
+</body>
+</html>
