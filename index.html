@@ -347,7 +347,7 @@ window.calcTotal=function(lote){
   var badgeEl=document.getElementById('badge'+lote);
   if(v>0||c>0||p>0){
     totEl.textContent=t+' pts';
-    badgeEl.textContent='✔ '+t+' pts';
+    badgeEl.textContent=t+' pts';
   } else {
     totEl.textContent='—';
     badgeEl.textContent='—';
@@ -522,7 +522,7 @@ window.gerarPDF=function(){
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,azul);
   doc.text('Critérios de Avaliação de Qualidade',ML+3,y+5);
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor.apply(doc,cinza);
-  doc.text('Notas de 0 a 100 (múltiplos de 5)  |  Total máximo: 300 pts  |  Aprovado: ≥ 201 pts',ML+3,y+9.5);
+  doc.text('Notas de 0 a 100 (múltiplos de 5)  |  Total máximo: 300 pts  |  Aprovado: >= 201 pts',ML+3,y+9.5);
   doc.text('Volume: desenvolvimento da massa  |  Crocância: textura da casca  |  Pestana: abertura lateral',ML+3,y+13.5);
   y+=20;
 
@@ -558,7 +558,7 @@ window.gerarPDF=function(){
     // Status
     doc.setFillColor.apply(doc,verdeL); doc.rect(ML,bodyY+22,CW,8,'F'); doc.rect(ML,bodyY+22,CW,8,'S');
     doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,verde);
-    doc.text('✔  APROVADO',W/2,bodyY+27,{align:'center'});
+    doc.text('APROVADO',W/2,bodyY+27,{align:'center'});
     y+=32;
   });
 
