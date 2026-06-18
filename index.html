@@ -358,7 +358,7 @@ window.calcTotal=function(lote){
 window.adicionarFoto=function(){
   fotoCount++;
   var fid='foto'+fotoCount;
-  fotosData[fid]={lotesSel:[],base64:null};
+  fotosData[fid]={lotesSel:[],base64:null,num:fotoCount};
   var div=document.createElement('div');
   div.className='foto-card'; div.id=fid;
   div.innerHTML='<div class="foto-card-header">'
@@ -456,6 +456,10 @@ function atualizarResumoFotos(){
 }
 
 // ── PDF ────────────────────────────────────────────────────────────────────
+var COMPOSICOES={"FA":"Farinha de trigo enriquecido com ferro e ácido fólico, água, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","FM":"Farinha de trigo enriquecido com ferro e ácido fólico, água, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","FB":"Farinha de trigo enriquecido com ferro e ácido fólico, água, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","PA":"Farinha de trigo enriquecido com ferro e ácido fólico, água, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","BG":"Farinha de trigo enriquecido com ferro e ácido fólico, água, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","QG":"Fécula de mandioca, amido modificado de mandioca, ovos, queijo minas, margarina 80% de gordura, óleo de soja, soro de leite em pó e sal.","QP":"Fécula de mandioca, amido modificado de mandioca, ovos, queijo minas, margarina 80% de gordura, óleo de soja, soro de leite em pó e sal.","HB":"Farinha de trigo enriquecido com ferro e ácido fólico, água, açúcar, margarina 80% de gordura, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","PD":"Farinha de trigo enriquecido com ferro e ácido fólico, água, açúcar, margarina 80% de gordura, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","MD":"Farinha de trigo enriquecido com ferro e ácido fólico, água, açúcar, margarina 80% de gordura, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","DG":"Farinha de trigo enriquecido com ferro e ácido fólico, água, açúcar, margarina 80% de gordura, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","DN":"Farinha de trigo enriquecido com ferro e ácido fólico, água, margarina 80% de gordura, açúcar, ovos, fermento biológico, sal, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","FL":"Farinha de trigo enriquecido com ferro e ácido fólico, fubá de milho, água, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.","BM":"Fubá de milho, farinha de trigo enriquecido com ferro e ácido fólico, açúcar, água, ovos, margarina 80% de gordura, sal, fermento químico e fermento biológico.","BP":"Farinha de mandioca, farinha de trigo enriquecido com ferro e ácido fólico, açúcar, água, ovos, margarina 80% de gordura, sal, fermento químico e fermento biológico."};
+var MODOS={"QG":"Disponha os produtos em assadeiras. Leve ao forno preaquecido a 180 ºC por aproximadamente 25 a 30 minutos ou até dourar.","QP":"Disponha os produtos em assadeiras. Leve ao forno preaquecido a 180 ºC por aproximadamente 20 a 25 minutos ou até dourar.","BM":"Disponha em formas untadas. Leve ao forno a 180 ºC por aproximadamente 30 a 35 minutos ou até dourar.","BP":"Disponha em formas untadas. Leve ao forno a 180 ºC por aproximadamente 30 a 35 minutos ou até dourar."};
+var COMP_DEFAULT="Farinha de trigo enriquecido com ferro e ácido fólico, água, sal, fermento biológico, emulsificante mono e diglicerídeos de ácidos graxos, amido de milho e enzimas: maltogênica, xylanase e alfa-amilase.";
+var MODO_DEFAULT="Disponha os produtos sob formas e aguarde o descongelamento e crescimento das massas. Quando estabilizado o crescimento, corte as pestanas e forneie por aproximadamente 18 minutos em temperatura de 165 ºC ou até atingir a coloração desejada.";
 window.gerarPDF=function(){
   var produto=document.getElementById('produto').value;
   var dataFab=document.getElementById('data-fab').value;
@@ -586,9 +590,14 @@ window.gerarPDF=function(){
       y+=7;
       if(temFoto){
         try{
-          doc.addImage(fd.base64,'JPEG',ML,y,CW,50,'','FAST');
-          doc.setDrawColor.apply(doc,azul); doc.rect(ML,y,CW,50,'S');
-          y+=52;
+          var tmpImg=new Image(); tmpImg.src=fd.base64;
+          var iw=tmpImg.naturalWidth||800, ih=tmpImg.naturalHeight||600;
+          var maxH=55,maxW=CW,ratio=iw/ih,fw=maxW,fh=maxW/ratio;
+          if(fh>maxH){fh=maxH;fw=maxH*ratio;}
+          var fx=ML+(CW-fw)/2;
+          doc.addImage(fd.base64,'JPEG',fx,y,fw,fh,'','FAST');
+          doc.setDrawColor.apply(doc,azul); doc.rect(fx,y,fw,fh,'S');
+          y+=fh+4;
         }catch(e){y+=4;}
       } else {
         doc.setFillColor(240,244,248); doc.rect(ML,y,CW,14,'F'); doc.rect(ML,y,CW,14,'S');
@@ -600,37 +609,31 @@ window.gerarPDF=function(){
     y+=6;
   }
 
-  // PARÂMETROS MICROBIOLÓGICOS
-  checkY(52);
+  // COMPOSIÇÃO
+  checkY(30);
   doc.setFillColor.apply(doc,azul); doc.rect(ML,y,CW,8,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
-  doc.text('PARÂMETROS MICROBIOLÓGICOS',ML+3,y+5.5);
+  doc.text('COMPOSIÇÃO',ML+3,y+5.5);
   y+=10;
-  doc.setFontSize(8); doc.setTextColor.apply(doc,cinza); doc.setFont('helvetica','italic');
-  doc.text('Conforme RDC nº 724/2022 e IN 161/2022 — Alimentos Semielaborados.',ML,y+4);
-  y+=8;
-  var micros=[['Salmonella sp. / 25 g','Ausente'],['Bacillus cereus presuntivo / g','10²'],['Estafilococos coagulase positiva / g','5×10²'],['Escherichia coli / g','5×10']];
-  var mW=[CW*0.5,CW*0.25,CW*0.25];
-  doc.setFillColor.apply(doc,azulL); doc.rect(ML,y,CW,7,'F'); doc.rect(ML,y,CW,7,'S');
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor.apply(doc,azul);
-  doc.text('Micro-organismo',ML+2,y+4.8);
-  doc.text('Limite Permitido',ML+mW[0]+2,y+4.8);
-  doc.text('Resultado do Ensaio',ML+mW[0]+mW[1]+2,y+4.8);
-  y+=7;
-  micros.forEach(function(row,i){
-    doc.setFillColor.apply(doc,i%2===0?cinzaL:branco);
-    doc.rect(ML,y,CW,7,'F'); doc.rect(ML,y,CW,7,'S');
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(0,0,0);
-    doc.text(row[0],ML+2,y+4.8);
-    doc.text(row[1],ML+mW[0]+2,y+4.8);
-    doc.setTextColor.apply(doc,cinza); doc.setFont('helvetica','italic');
-    doc.text('[RESULTADO]',ML+mW[0]+mW[1]+2,y+4.8);
-    y+=7;
-  });
-  doc.setFillColor.apply(doc,cinzaL); doc.rect(ML,y,CW,7,'F'); doc.rect(ML,y,CW,7,'S');
-  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor.apply(doc,cinza);
-  doc.text('Laboratório: [NOME DO LAB / INMETRO]     Nº RA: [RA-XXXXX]     Data: [DD/MM/AAAA]',ML+2,y+4.8);
-  y+=12;
+  var compTxt=COMPOSICOES[produto]||COMP_DEFAULT;
+  doc.setFillColor(255,255,255); doc.rect(ML,y,CW,24,'F'); doc.rect(ML,y,CW,24,'S');
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(30,30,30);
+  var compLines=doc.splitTextToSize(compTxt,CW-4);
+  doc.text(compLines,ML+2,y+5);
+  y+=26;
+
+  // MODO DE PREPARO
+  checkY(28);
+  doc.setFillColor.apply(doc,azul); doc.rect(ML,y,CW,8,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+  doc.text('MODO DE PREPARO',ML+3,y+5.5);
+  y+=10;
+  var prepTxt=MODOS[produto]||MODO_DEFAULT;
+  doc.setFillColor.apply(doc,azulL); doc.rect(ML,y,CW,20,'F'); doc.rect(ML,y,CW,20,'S');
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(30,30,30);
+  var prepLines=doc.splitTextToSize(prepTxt,CW-4);
+  doc.text(prepLines,ML+2,y+5);
+  y+=22;
 
   // DECLARAÇÃO
   checkY(20);
